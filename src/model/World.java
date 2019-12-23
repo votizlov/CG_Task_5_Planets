@@ -9,17 +9,46 @@ import utils2d.ScreenConverter;
 import utils2d.ScreenPoint;
 
 import java.awt.*;
+import java.util.LinkedList;
 
 public class World implements IWorld {
 
-    private Movable p;
     private Field f;
     private ForceSource externalForce;
+    private LinkedList<Planet> planets;
+    private LinkedList<Satellite> satellites;
+    private Vector2 center;
 
-    public World(Movable p, Field f) {
-        this.p = p;
+    public World(Field f) {
         this.f = f;
         this.externalForce = new ForceSource(f.getRectangle().getCenter());
+        this.planets = new LinkedList<>();
+        this.satellites = new LinkedList<>();
+        for (Planet p: planets
+        ) {
+            function calculateDistanceAcceleration(state) {
+            return state.distance.value * Math.pow(state.angle.speed, 2) -
+                    (constants.gravitationalConstant * state.massOfTheSunKg) / Math.pow(state.distance.value, 2);
+}
+            function calculateAngleAcceleration(state) {
+            return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
+}
+        }
+
+        //satellite calc
+        for (Satellite s:satellites
+        ) {
+            function calculateDistanceAcceleration(state) {
+            return state.distance.value * Math.pow(state.angle.speed, 2) -
+                    (constants.gravitationalConstant * state.massOfTheSunKg) / Math.pow(state.distance.value, 2);
+}
+            function calculateAngleAcceleration(state) {
+            return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
+}
+        }
+    }
+    function newValue(currentValue, deltaT, derivative) {
+        return currentValue + deltaT * derivative;
     }
     
     /**
@@ -27,39 +56,46 @@ public class World implements IWorld {
      * @param dt Промежуток времени, за который требуется обновить мир.
      */
     public void update(double dt) {
-        Vector2 np = p.getPosition()
-                .add(p.getVelocity().mul(dt))
-                .add(p.getAcceleration().mul(dt*dt*0.5));
-        Vector2 nv = p.getVelocity()
-                .add(p.getAcceleration().mul(dt));
-        
-        double vx = nv.getX(), vy = nv.getY();
-        boolean reset = false;
-        if (np.getX() - p.getR() < f.getRectangle().getLeft() || np.getX() + p.getR() > f.getRectangle().getRight()) {
-            vx = -vx;
-            reset = true;
-        }
-        if (np.getY() - p.getR() < f.getRectangle().getBottom() || np.getY() + p.getR() > f.getRectangle().getTop()) {
-            vy = -vy;
-            reset = true;
-        }
-        nv = new Vector2(vx, vy);
-        if (nv.length() < 1e-10)
-            nv = new Vector2(0, 0);
-        if (reset)
-            np = p.getPosition();
-        
-        Vector2 Fvn = externalForce.getForceAt(np);
-        Vector2 Ftr = p.getVelocity().normolized().mul(-f.getMu()*p.getM()*f.getG());
-        Vector2 F = Ftr.add(Fvn);
-        
-        p.setAcceleration(F.mul(1/p.getM()));
-        p.setVelocity(nv);
-        p.setPosition(np);
-
+//https://evgenii.com/blog/earth-orbit-simulation/
         //planets calc
+        for (Planet p: planets
+             ) {
+            var distanceAcceleration = calculateDistanceAcceleration(state);
+
+            state.distance.speed = newValue(state.distance.speed,
+                    deltaT, distanceAcceleration);
+
+            state.distance.value = newValue(state.distance.value,
+                    deltaT, state.distance.speed);
+
+            var angleAcceleration = calculateAngleAcceleration(state);
+
+            state.angle.speed = newValue(state.angle.speed,
+                    deltaT, angleAcceleration);
+
+            state.angle.value = newValue(state.angle.value,
+                    deltaT, state.angle.speed);
+        }
 
         //satellite calc
+        for (Satellite s:satellites
+             ) {
+            var distanceAcceleration = calculateDistanceAcceleration(state);
+
+            state.distance.speed = newValue(state.distance.speed,
+                    deltaT, distanceAcceleration);
+
+            state.distance.value = newValue(state.distance.value,
+                    deltaT, state.distance.speed);
+
+            var angleAcceleration = calculateAngleAcceleration(state);
+
+            state.angle.speed = newValue(state.angle.speed,
+                    deltaT, angleAcceleration);
+
+            state.angle.value = newValue(state.angle.value,
+                    deltaT, state.angle.speed);
+        }
     }
     
     /**
@@ -77,12 +113,16 @@ public class World implements IWorld {
         g.fillRect(tl.getI(), tl.getJ(), w, h);
         g.setColor(Color.RED);
         g.drawRect(tl.getI(), tl.getJ(), w, h);
-        ScreenPoint pc = sc.r2s(p.getPosition());
-        int rh = sc.r2sDistanceH(p.getR());
-        int rv = sc.r2sDistanceV(p.getR());
-        g.setColor(Color.BLACK);
-        //g.fillOval(pc.getI() - rh, pc.getJ() - rv, rh + rh, rv + rv);
-        p.draw(g,sc.r2s(p.getPosition()).getI(),sc.r2s(p.getPosition()).getJ());
+
+        for (Planet p:planets
+             ) {
+            p.draw(g,sc.r2s(p.getPos()).getI(),sc.r2s(p.getPos()).getJ());
+        }
+
+        for (Satellite s:satellites
+             ) {
+            s.draw(g,sc.r2s(s.getPos()).getI(),sc.r2s(s.getPos()).getJ());
+        }
 
         g.drawString(String.format("Mu=%.2f", f.getMu()), 10, 30);
         g.drawString(String.format("F=%.0f", externalForce.getValue()), 10, 50);
@@ -95,16 +135,16 @@ public class World implements IWorld {
     public void setF(Field f) {
         this.f = f;
     }
-
-    public Movable getM() {
-        return p;
-    }
-
-    public void setM(Movable p) {
-        this.p = p;
-    }
     
     public ForceSource getExternalForce() {
         return externalForce;
+    }
+
+    public void addPlanet(Planet p){
+        planets.add((p));
+    }
+
+    public void addSatellite(Satellite s){
+        satellites.add(s);
     }
 }

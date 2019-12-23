@@ -1,4 +1,5 @@
 package model;
 
-public class Satellite {
+public abstract class Satellite extends Planet {
+
 }

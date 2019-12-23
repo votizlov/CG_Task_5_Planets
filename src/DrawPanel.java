@@ -30,7 +30,7 @@ public class DrawPanel extends JPanel implements ActionListener,
                 new Rectangle(0, 10, 10, 10),
                 0.1, 9.8);
         BufferedImage img = new BufferedImage(5,5,BufferedImage.TYPE_INT_RGB);
-        w = new World(new MovableCircle(1, 0.3, f.getRectangle().getCenter(),img), f);
+        w = new World(f);
         sc = new ScreenConverter(f.getRectangle(), 450, 450);
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -121,16 +121,16 @@ public class DrawPanel extends JPanel implements ActionListener,
         Vector2 dir = new Vector2(0,0);
         switch (keyEvent.getKeyCode()){
             case KeyEvent.VK_UP:
-                dir = w.getM().getPosition().add(new Vector2(0,5));
+                //dir = w.getM().getPosition().add(new Vector2(0,5));
                 break;
             case KeyEvent.VK_DOWN:
-                dir = w.getM().getPosition().add(new Vector2(0,-5));
+                //dir = w.getM().getPosition().add(new Vector2(0,-5));
                 break;
             case KeyEvent.VK_LEFT:
-                dir = w.getM().getPosition().add(new Vector2(-5,0));
+                //dir = w.getM().getPosition().add(new Vector2(-5,0));
                 break;
             case KeyEvent.VK_RIGHT:
-                dir = w.getM().getPosition().add(new Vector2(5,0));
+                //dir = w.getM().getPosition().add(new Vector2(5,0));
                 break;
         }
         w.getExternalForce().setLocation(dir);
