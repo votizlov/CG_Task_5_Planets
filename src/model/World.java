@@ -5,6 +5,8 @@
 package model;
 
 import math.Vector2;
+import model.planets.Earth;
+import model.planets.Sun;
 import utils2d.ScreenConverter;
 import utils2d.ScreenPoint;
 
@@ -20,7 +22,8 @@ public class World implements IWorld {
     private LinkedList<Planet> planets;
     private LinkedList<Satellite> satellites;
     private Vector2 center;
-    private double massOfTheSunKg = 100000;
+    private Planet sun;
+    private double massOfTheSunKg = 1.989E30;
     private double gravitationalConstant = 6.674*pow(10,-11);
 
     public World(Field f) {
@@ -28,30 +31,11 @@ public class World implements IWorld {
         this.externalForce = new ForceSource(f.getRectangle().getCenter());
         this.planets = new LinkedList<>();
         this.satellites = new LinkedList<>();
-        for (Planet p: planets
-        ) {
-            function calculateDistanceAcceleration(state) {
-            return state.distance.value * pow(state.angle.speed, 2) -
-                    (constants.gravitationalConstant * state.massOfTheSunKg) / pow(state.distance.value, 2);
-}
-            function calculateAngleAcceleration(state) {
-            return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
-}
-        }
-
-        //satellite calc
-        for (Satellite s:satellites
-        ) {
-            function calculateDistanceAcceleration(state) {
-            return state.distance.value * pow(state.angle.speed, 2) -
-                    (constants.gravitationalConstant * state.massOfTheSunKg) / pow(state.distance.value, 2);
-}
-            function calculateAngleAcceleration(state) {
-            return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
-}
-        }
+        this.sun = new Sun();
+        float sunM;
+        planets.add(new Earth());
     }
-    function newValue(currentValue, deltaT, derivative) {
+    private float newValue(float currentValue,float deltaT,float derivative) {
         return currentValue + deltaT * derivative;
     }
     
@@ -64,12 +48,13 @@ public class World implements IWorld {
         //planets calc
         for (Planet p: planets
              ) {
-            var distanceAcceleration = calculateDistanceAcceleration(state);
+            State s = p.getState();
+            var distanceAcceleration = calculateDistanceAcceleration(s);
 
-            state.distance.speed = newValue(state.distance.speed,
+            s.distance.speed = newValue(s.distance.speed,
                     deltaT, distanceAcceleration);
 
-            state.distance.value = newValue(state.distance.value,
+            s.distance.value = newValue(s.distance.value,
                     deltaT, state.distance.speed);
 
             var angleAcceleration = calculateAngleAcceleration(state);
@@ -150,5 +135,14 @@ public class World implements IWorld {
 
     public void addSatellite(Satellite s){
         satellites.add(s);
+    }
+
+    private float calculateDistanceAcceleration(State state) {
+        return state.distance.value * Math.pow(state.angle.speed, 2) -
+                (gravitationalConstant * massOfTheSunKg) / Math.pow(state.distance.value, 2);
+    }
+
+    private float calculateAngleAcceleration(State state) {
+        return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
     }
 }
