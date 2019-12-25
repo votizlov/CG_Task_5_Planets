@@ -11,6 +11,8 @@ import utils2d.ScreenPoint;
 import java.awt.*;
 import java.util.LinkedList;
 
+import static java.lang.Math.pow;
+
 public class World implements IWorld {
 
     private Field f;
@@ -18,6 +20,8 @@ public class World implements IWorld {
     private LinkedList<Planet> planets;
     private LinkedList<Satellite> satellites;
     private Vector2 center;
+    private double massOfTheSunKg = 100000;
+    private double gravitationalConstant = 6.674*pow(10,-11);
 
     public World(Field f) {
         this.f = f;
@@ -27,8 +31,8 @@ public class World implements IWorld {
         for (Planet p: planets
         ) {
             function calculateDistanceAcceleration(state) {
-            return state.distance.value * Math.pow(state.angle.speed, 2) -
-                    (constants.gravitationalConstant * state.massOfTheSunKg) / Math.pow(state.distance.value, 2);
+            return state.distance.value * pow(state.angle.speed, 2) -
+                    (constants.gravitationalConstant * state.massOfTheSunKg) / pow(state.distance.value, 2);
 }
             function calculateAngleAcceleration(state) {
             return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
@@ -39,8 +43,8 @@ public class World implements IWorld {
         for (Satellite s:satellites
         ) {
             function calculateDistanceAcceleration(state) {
-            return state.distance.value * Math.pow(state.angle.speed, 2) -
-                    (constants.gravitationalConstant * state.massOfTheSunKg) / Math.pow(state.distance.value, 2);
+            return state.distance.value * pow(state.angle.speed, 2) -
+                    (constants.gravitationalConstant * state.massOfTheSunKg) / pow(state.distance.value, 2);
 }
             function calculateAngleAcceleration(state) {
             return -2.0 * state.distance.speed * state.angle.speed / state.distance.value;
